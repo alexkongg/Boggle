@@ -1,0 +1,162 @@
+/**
+ * Copyright (C) 2002 Michael Green <mtgreen@cs.ucsd.edu>
+ * 
+ * Copyright (C) 2002 Paul Kube <kube@cs.ucsd.edu>
+ * 
+ * Copyright (C) 2005 Owen Astrachan <ola@cs.duke.edu>
+ * 
+ * Copyright (C) 2011 Hoa Long Tam <hoalong.tam@berkeley.edu> and Armin Samii
+ * <samii@berkeley.edu>
+ * 
+ * This file is part of CS Boggle.
+ * 
+ * CS Boggle is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ * 
+ * CS Boggle is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * CS boggle. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class WordOnBoardFinder {
+	
+
+
+	/**
+	 * Return a list of cells on the given board such that the i-th element of the
+	 * list corresponds to the i-th character of the string as found on the board.
+	 * Returns an empty list if the word cannot be found on the board.
+	 * 
+	 * @param board
+	 *          is searched for the given word
+	 * @param word
+	 *          is being searched for on the board
+	 * @return list of cells on the supplied board that correspond to the word, an
+	 *         empty list should be returned if the word cannot be found on the
+	 *         board
+	 */
+	public List<BoardCell> cellsForWord(BoggleBoard board, String word) {
+		boolean [] [] visited = new boolean[board.size()] [board.size()];
+		List<BoardCell> list = new ArrayList<BoardCell>();
+
+		if (word.equals("") || word == null) {
+			return list;
+		}
+
+		for (int r = 0; r < board.size(); r++) {
+			for (int c = 0; c < board.size(); c++) {
+				// Check if the word can be found by starting at (r, c)
+
+				if (String.valueOf(word.charAt(0)).equals(board.getFace(r,c).substring(0,1))) {
+					BoardCell newCell= new BoardCell(r,c);
+
+					list.add(newCell);
+					visited[r][c] = true;
+					String result;
+
+					if (word.charAt(0) == 'q') {
+						result = cellsForWordHelper(newCell, board, list,
+								word.substring(2, word.length()), board.getFace(r,c), visited, word);
+					} 
+
+					else {
+						result = cellsForWordHelper(newCell, board, list, 
+								word.substring(1,word.length()), board.getFace(r, c), visited, word);
+					}
+					// If the word can be formed starting at the current letter, return list containing BoardCells corresponding to
+					// formed word
+					if (result.equals(word)) { 
+						return list;
+
+					} 
+
+					else {
+						visited = new boolean[board.size()] [board.size()];
+						list = new ArrayList<BoardCell>(); 
+						// If helper returns a word different than parameter, reinitialize the list
+
+					}
+
+				}
+			}
+		}
+		return list;
+	}
+
+
+	/**
+	 * Helper function used by cellsForWord to insert into the given list the
+	 * BoardCells representing each letter of a word if the word can be found
+	 * on the board. 
+	 * 
+	 * @param previous
+	 *          is used to search neighboring cells for the next letter in the word
+	 * @param board
+	 *          is searched for the given word
+	 * @param list
+	 *          stores the BoardCells of the letters in a valid word present on the board
+	 * @param remaining
+	 *          is the substring of the given word; keeps track of the next letter to look for
+	 * @param contains
+	 *          keeps track of which letters have been found already     
+	 * 
+	 * 
+	 * @return the string contains, which cellsForWord compares to the given word to see if,
+	 * at the end of the path, the given word has been constructed by cellsForWordHelper
+	 */ 
+	private String cellsForWordHelper(BoardCell previous, BoggleBoard board, 
+			List<BoardCell> list, String remaining, String contains, boolean[][] visited, String word) {
+		String candidate;
+		if (!(remaining.equals(""))) {
+
+			for (int r = 0; r < board.size(); r++) {
+				for (int c = 0; c < board.size(); c++) {
+
+					if (visited[r][c] == false) {
+						BoardCell newCell = new BoardCell(r,c);
+
+						// If current letter matches first letter of remaining String and also is a neighbor of previous BoardCell
+						if (board.getFace(r, c).substring(0, 1).equals(String.valueOf(remaining.charAt(0))) 
+								&& previous.isNeighbor(newCell)) {
+
+							list.add(newCell);
+							visited[r][c] = true;
+
+							if (remaining.charAt(0) == 'q') {
+
+								candidate = cellsForWordHelper(newCell, board, list, remaining.substring(2,remaining.length()), 
+										contains + board.getFace(r, c), visited, word);
+
+							} else {
+
+								candidate = cellsForWordHelper(newCell, board, list, remaining.substring(1,remaining.length()), 
+										contains + board.getFace(r, c), visited, word);
+
+							}
+							if (candidate.equals(word)) { // If current letter can form the given word, then return the word
+								return candidate;
+							} else {
+								list.remove(newCell); // Else continue loop
+								visited[r][c] = false;
+							}
+						}
+					}
+				}
+			}
+			return contains;
+
+		} else {
+			return contains;
+		}
+	}
+
+}

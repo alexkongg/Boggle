@@ -1,0 +1,89 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Copyright (C) 2002 Michael Green <mtgreen@cs.ucsd.edu>
+ * 
+ * Copyright (C) 2002 Paul Kube <kube@cs.ucsd.edu>
+ * 
+ * Copyright (C) 2005 Owen Astrachan <ola@cs.duke.edu>
+ * 
+ * Copyright (C) 2011 Hoa Long Tam <hoalong.tam@berkeley.edu> and Armin Samii
+ * <samii@berkeley.edu>
+ * 
+ * This file is part of CS Boggle.
+ * 
+ * CS Boggle is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ * 
+ * CS Boggle is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * CS boggle. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+public class AutoPlayerBoardFirst extends AbstractPlayer {
+  
+  public AutoPlayerBoardFirst(LexiconInterface lex) {
+    this.initialize(lex);
+  }
+  
+  /**
+   * Find all the valid words automatically, found words should be added via the
+   * <code>AbstractPlayer</code>'s <code>add</code> method.
+   * 
+   * @param board
+   *          is the BoggleBoard on which words are found
+   * @param lex
+   *          is the lexicon in which words are searched/validated
+   * @param minLength
+   *          of words found by an autoplayer
+   */
+  public void findAllValidWords(BoggleBoard board, LexiconInterface lex,
+                                int minLength) {
+    /* TODO: Given a board and a lexicon, use the add() in AbstractPlayer.java
+     * to add all words that are both in the board and in the lexicon.
+     * 
+     * This method will run after the human player finishes entering words. */
+	  WordOnBoardFinder myFinder = new WordOnBoardFinder();
+	  if (lex instanceof LexiconTrie) {
+		  for (int r=0; r < board.size(); r++) {
+			  for (int c=0; c< board.size(); c++) {
+				  //System.out.println("checking row " + r + " column " + c);
+				  helper(board, lex, r, c,"");
+			  }
+		  }
+	  }
+  }
+			  
+  // NEED TO DO: make sure that visited words aren't visited again.
+  
+  public void helper(BoggleBoard b, LexiconInterface lex, int r, int c, String sofar) {
+	    System.out.println("Face is " + b.getFace(r,c) + " and sofar is " + sofar);
+	    //System.out.println("lex contains face? " + lex.containsPrefix(b.getFace(r,c)));
+		if (lex.containsPrefix(b.getFace(r,c)) && lex.contains(sofar)) {
+			System.out.println("adding " + sofar);
+			this.add(sofar);
+		} 
+		if (lex.containsPrefix(b.getFace(r,c))) {
+			sofar+=b.getFace(r,c);
+			for (int row=r-1; row<r+2; row++) {
+				for (int col=c-1; col<c+2; c++) {
+					if (row>=0 && row<b.size() && col>=0 && col<b.size()) {
+						helper(b, lex, row, col, sofar);
+					}
+				}
+			}
+		}
+	}
+
+  
+  @Override
+  public String getName() {
+    return "AutoPlayer";
+  }
+}

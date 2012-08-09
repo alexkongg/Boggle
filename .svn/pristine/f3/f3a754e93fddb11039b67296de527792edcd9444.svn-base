@@ -1,0 +1,267 @@
+/**
+ * Copyright (C) 2002 Michael Green <mtgreen@cs.ucsd.edu>
+ * 
+ * Copyright (C) 2002 Paul Kube <kube@cs.ucsd.edu>
+ * 
+ * Copyright (C) 2005 Owen Astrachan <ola@cs.duke.edu>
+ * 
+ * Copyright (C) 2011 Hoa Long Tam <hoalong.tam@berkeley.edu> and Armin Samii
+ * <samii@berkeley.edu>
+ * 
+ * This file is part of CS Boggle.
+ * 
+ * CS Boggle is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ * 
+ * CS Boggle is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * CS boggle. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import java.util.ArrayList;
+
+import java.util.Scanner;
+
+public class LexiconTrie implements LexiconInterface {
+	/**
+	 * Load the words from an input source and store them in this lexicon.
+	 * 
+	 * @param input A scanner that will provide the entire dictionary.
+	 */
+	
+	//Changed from private to protected to complete AutoPlayerLexiconFirst.
+	protected Trie myDictionary = new Trie();
+
+	public void load(Scanner input) {
+		while (input.hasNext()) {
+			String nextStr = input.next();
+
+			/* TODO: Store the dictionary efficiently. You must implement a trie here.
+			 * 
+			 * Use good programming practices here:
+			 * - Keep instance variables private
+			 * - Use methods to break up your code into logical segments.
+			 * - Write tests for EVERY non-trivial method.
+			 */
+			// Dictionary key -> string prefix or word, value -> boolean is prefix or word
+			if (nextStr!="") {
+				
+				LetterNode firstLetter = myDictionary.getFirstLetter(nextStr.substring(0,1));
+				if (nextStr.length() == 1) {
+					firstLetter.completesFullWord = true;
+				}
+				loadHelper(nextStr.substring(1), firstLetter);
+			}
+		}
+	}
+
+	private void loadHelper(String strItem, LetterNode w) {
+
+		if (strItem.equals("")) {
+			return;
+		}
+
+		else {
+
+			for (int x = 0; x < w.myChildren.size(); x++) {
+
+				// If w already has a child LetterNode equal to the first letter of strItem
+				if (w.myChildren.get(x).toString().equals(strItem.substring(0,1))) {
+					LetterNode nextLetter = w.myChildren.get(x);
+
+					// Mark end of word
+					if (strItem.length() == 1) {
+						nextLetter.completesFullWord = true;
+					}
+
+					loadHelper(strItem.substring(1), nextLetter);
+
+
+					return;
+				}
+			}
+
+			// If w does not have a child LetterNode corresponding to the next letter of the word
+			LetterNode newLetter = new LetterNode(strItem.substring(0,1), w);
+			w.myChildren.add(newLetter);
+
+			// Mark end of word
+			if (strItem.length() == 1) {
+				newLetter.completesFullWord = true;
+			}
+			loadHelper(strItem.substring(1), newLetter);
+			return ;
+		}
+	}
+
+
+	/**
+	 * If the prefix is in the lexicon, returns true.
+	 * 
+	 * @param s The word to search for.
+	 * @return True if the lexicon contains s.
+	 */
+	public boolean containsPrefix(String s) {
+		if (s == "") {
+			return false;
+		}
+
+		boolean hasFirstLetter = false;
+		for (int x = 0; x < myDictionary.myChildren.size(); x++) {
+			LetterNode current = myDictionary.myChildren.get(x);
+			if (current.toString().equals(s.substring(0,1))) {
+				hasFirstLetter= true;
+			}
+		}
+		LetterNode firstLetter = myDictionary.getFirstLetter(s.substring(0,1));
+
+
+		return hasFirstLetter && containsPrefixHelper(s, firstLetter);
+	}
+
+
+	private boolean containsPrefixHelper(String s, LetterNode w) {
+		if (w.toString().equals(s.substring(0,1))) {
+			if (s.length()== 1) {
+				return true;
+			}
+			else {
+				LetterNode nextPossible = w.getChild(s.substring(1,2));
+				
+				if (nextPossible == null) {
+					return false;
+				}
+				
+				else {
+					return containsPrefixHelper(s.substring(1), nextPossible);
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * If the word is in the lexicon, returns true.
+	 * 
+	 * @param s The word to search for.
+	 * @return True if the lexicon contains s.
+	 */
+	public boolean contains(String s) {
+		if (s == "") {
+			return false;
+		}
+
+		boolean hasFirstLetter = false;
+
+		for (int x = 0; x < myDictionary.myChildren.size(); x++) {
+			if (myDictionary.myChildren.get(x).toString().equals(s.substring(0,1))) {
+				hasFirstLetter = true;
+			}
+		}
+
+		return hasFirstLetter && containsHelper(s, myDictionary.getFirstLetter(s.substring(0,1)));
+
+
+	}
+
+	public boolean containsHelper(String s, LetterNode w) {
+		if (w.toString().equals(s.substring(0,1))) {
+			if (s.length()== 1) {
+				if (w.completesFullWord) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else {
+				LetterNode nextPossible = w.getChild(s.substring(1,2));
+				
+				if (nextPossible == null) {
+					return false;
+				}
+				
+				else {
+					return containsHelper(s.substring(1), nextPossible);
+				}
+			}
+		}
+		return false;
+	}
+
+	// changed from private to protected for 3.1
+	protected static class Trie {
+		public ArrayList<LetterNode> myChildren;
+
+		public Trie() {
+			myChildren = new ArrayList<LetterNode>();
+		}
+		/**
+		 * If Trie already has a child containing the specified letter,
+		 * return the child; else add a new child carrying the letter and
+		 * return the new child
+		 * 
+		 * @param letter, a one-lettered string that marks the beginning of a word
+		 * @return child containing the specified letter
+		 */
+		public LetterNode getFirstLetter(String letter) {
+			for (int x = 0; x < myChildren.size(); x++) {
+				LetterNode current = myChildren.get(x);
+				if (current.toString().equals(letter)) {
+					return current;
+				}
+			}
+			LetterNode newLetter = new LetterNode(letter, null);
+			
+			myChildren.add(newLetter);
+			return newLetter;
+
+		}
+	}
+
+	public static class LetterNode {
+		public String myLetter; // Letter
+		public LetterNode myParent; // Preceding LetterNode
+		public ArrayList<LetterNode> myChildren; // Following LetterNodes
+		protected boolean completesFullWord; // Marks end of word
+
+		public LetterNode(String word, LetterNode parent) {
+			myLetter = word;
+			myParent = parent;
+			myChildren = new ArrayList<LetterNode>();
+		}
+
+		public String toString() {
+			return myLetter;
+		}
+
+		public LetterNode parent() {
+			return myParent;
+		}
+
+		// Add an amoeba with the given name as this amoeba's youngest child.
+		public void addChild(String childName) {
+			LetterNode child = new LetterNode(childName, this);
+			myChildren.add(child);
+		}
+		
+		// Tell whether or not LetterNode is a leaf
+		public boolean isLeaf() {
+			return this.myChildren.isEmpty();
+		}
+
+		public LetterNode getChild(String letter) {
+			for (int x = 0; x < myChildren.size(); x++) {
+				if (myChildren.get(x).toString().equals(letter)) {
+					return myChildren.get(x);
+				}
+			}
+			return null;
+		}
+	}
+}

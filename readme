@@ -1,0 +1,29 @@
+Your final task is to document your project in a README file. This README must contain the
+following:
+1. A description of your two Lexicon classes and how they are implemented. Describe how your
+binary search for the ArrayList implementation works to return the information we specified.
+Also describe your Trie data structure and what helper methods, instance variables, and other
+classes you used.
+2. Perform some empirical and statistical analysis on your two Lexicon classes and your two
+Autoplayer classes (i.e. timing experiments). Elaborate on the differences between
+implementations and how those differences might lead to the different data you collect for each.
+1-2 pages for the README will suffice. The more detailed you get, the better it will look and
+the more you will learn. Charts and graphs are always welcome.
+
+1. Lexicon ArrayList Class:
+	In the LexiconArrayList class, inputs are added to an ArrayList of Strings called myDictionary.
+	Then, the entire ArrayList collection is sorted with the built in Collections.sort(myDictionary)
+	method to sort all the String words in the ArrayList alphabetically. 
+	In the contains method, we simply make use of Collections.binarySearch() to find if the given String is
+	in the myDictionary Collection.
+	In the containsPrefix method, we first specify the starting and and ending pointers which indicate
+	the range of words that could possibly contain the given prefix. It begins with starting as 0 and ending
+	as the last index in myDictionary. Then, in the while loop, we check if the String word at the middle index
+	of the starting and ending pointers contains the prefix. When comparing these values, we ignore the case
+	of the letters and check only as many characters as the prefix is long. If the prefix is found, we return
+	true, and if not, we reset the starting and ending pointers to either the first or the second half of the range.
+	The while loop continues until the prefix is found. If it is not found and the range becomes zero, we return false.
+	
+1. Lexicon Trie Class:
+	In the LexiconTrie class, we call loadhelper for every input with two parameters, one that represents the first
+	letter of the word and one that represents everything but the first letter.
